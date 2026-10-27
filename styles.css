@@ -1,0 +1,901 @@
+:root {
+  --bg: #0b0d10;
+  --card: #12161c;
+  --ink: #f4f1ea;
+  --muted: rgba(244, 241, 234, 0.62);
+  --line: rgba(244, 241, 234, 0.16);
+  --green: #3e6636;
+  --green-soft: rgba(62, 102, 54, 0.45);
+  --smoke-a: rgba(62, 102, 54, 0.35);
+  --smoke-b: rgba(90, 130, 150, 0.22);
+  --smoke-c: rgba(180, 120, 140, 0.18);
+  --radius: 6mm;
+  --font: "Manrope", sans-serif;
+  --display: "Cormorant Garamond", Georgia, serif;
+  --script: "Great Vibes", cursive;
+
+  /* Точные параметры печати: слева абонемент, справа отметки — 1 лист A4 */
+  --a4-w: 210mm;
+  --a4-h: 297mm;
+  --sheet-margin: 10mm;
+  --card-w: 90mm;
+  --cards-gap: 6mm;
+  --sheet-w: calc(var(--card-w) * 2 + var(--cards-gap)); /* 186 mm */
+  --card-pad-x: 5mm;
+  --card-pad-y: 4mm;
+  --visit-h: 14mm;
+  --visit-gap: 2mm;
+  --visit-radius: 2.5mm;
+  --visual-h: 64mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(62, 102, 54, 0.18), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(90, 120, 150, 0.12), transparent 50%),
+    var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+}
+
+.page {
+  width: min(var(--a4-w), calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+/* Превью бумажного листа A4 1:1 */
+.sheet-stage {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  overflow-x: auto;
+  padding: 0.25rem 0 0.5rem;
+}
+
+.sheet {
+  width: var(--a4-w);
+  height: var(--a4-h);
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  padding: var(--sheet-margin);
+  background: #fff;
+  color: #111;
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 18px 50px rgba(0, 0, 0, 0.55);
+}
+
+.toolbar {
+  margin-bottom: 1.75rem;
+}
+
+.print-specs {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.print-specs strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.print-specs code {
+  color: #c9dfc0;
+  font-family: var(--font);
+  font-size: 0.82rem;
+}
+
+.toolbar h1 {
+  margin: 0 0 0.35rem;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  letter-spacing: 0.02em;
+}
+
+.toolbar p {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.export-root {
+  display: grid;
+  grid-template-columns: var(--card-w) var(--card-w);
+  gap: var(--cards-gap);
+  justify-content: center;
+  align-items: start;
+  width: var(--sheet-w);
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Режим экспорта в PDF */
+body.pdf-exporting .toolbar {
+  display: none !important;
+}
+
+body.pdf-exporting .card,
+body.pdf-exporting .decor,
+body.pdf-exporting .logo,
+body.pdf-exporting .brand-text,
+body.pdf-exporting .fields,
+body.pdf-exporting .card-footer {
+  animation: none !important;
+  transform: none !important;
+}
+
+body.pdf-exporting .seal {
+  animation: none !important;
+}
+
+/* Градиенты карточки как на экране */
+body.pdf-exporting .card {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.04), transparent 40%),
+    linear-gradient(180deg, #161b22 0%, #0e1217 100%) !important;
+  box-shadow: none;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+body.pdf-exporting .card-visual {
+  background: #161b22 !important;
+  margin-bottom: -2px;
+}
+
+body.pdf-exporting .visual-fade {
+  background:
+    linear-gradient(180deg, transparent 42%, rgba(22, 27, 34, 0.7) 76%, #161b22 100%) !important;
+}
+
+body.pdf-exporting .card-body {
+  margin-top: -1px;
+  background: linear-gradient(180deg, #161b22 0, #161b22 4px, transparent 18px) !important;
+}
+
+/* Свечения без filter:blur — так они точно попадают в PDF */
+body.pdf-exporting .card-glow,
+body.pdf-exporting .card-smoke {
+  display: block !important;
+  animation: none !important;
+  filter: none !important;
+  opacity: 1;
+}
+
+body.pdf-exporting .card-glow {
+  background: radial-gradient(
+    closest-side,
+    rgba(62, 102, 54, 0.55),
+    rgba(62, 102, 54, 0.22) 42%,
+    transparent 72%
+  ) !important;
+}
+
+body.pdf-exporting .card-glow.soft {
+  background: radial-gradient(
+    closest-side,
+    rgba(90, 130, 150, 0.4),
+    rgba(90, 130, 150, 0.14) 45%,
+    transparent 72%
+  ) !important;
+}
+
+body.pdf-exporting .card-smoke {
+  background:
+    radial-gradient(ellipse 42% 62% at 28% 48%, rgba(180, 120, 140, 0.32), transparent 70%),
+    radial-gradient(ellipse 52% 78% at 62% 40%, rgba(90, 130, 150, 0.36), transparent 72%),
+    radial-gradient(ellipse 38% 58% at 82% 58%, rgba(62, 102, 54, 0.42), transparent 70%) !important;
+}
+
+body.pdf-exporting,
+body.pdf-exporting .page,
+body.pdf-exporting .sheet-stage,
+body.pdf-exporting .sheet,
+body.pdf-exporting .export-root {
+  background: #fff !important;
+  background-image: none !important;
+}
+
+body.pdf-exporting,
+body.pdf-exporting .card,
+body.pdf-exporting .visit,
+body.pdf-exporting .logo,
+body.pdf-exporting .seal,
+body.pdf-exporting .decor,
+body.pdf-exporting .card-glow,
+body.pdf-exporting .card-smoke {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
+body.pdf-exporting .page {
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+body.pdf-exporting .sheet-stage {
+  display: block;
+  overflow: visible;
+  padding: 0;
+}
+
+body.pdf-exporting .sheet {
+  width: var(--a4-w);
+  height: var(--a4-h);
+  padding: var(--sheet-margin);
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body.pdf-exporting .export-root {
+  grid-template-columns: var(--card-w) var(--card-w);
+  gap: var(--cards-gap);
+  width: var(--sheet-w);
+  padding: 0;
+  margin: 0 auto;
+}
+
+body.pdf-exporting .visit {
+  background: #c8d2c4 !important;
+  border-color: rgba(180, 195, 175, 0.55) !important;
+  color: #1a221c !important;
+}
+
+body.pdf-exporting .visit.used {
+  background: #b7c7ad !important;
+  border-color: #3e6636 !important;
+}
+
+body.pdf-exporting .brand-place {
+  color: #7ea56f !important;
+}
+
+body.pdf-exporting .brand-name,
+body.pdf-exporting .footer-note,
+body.pdf-exporting .field span,
+body.pdf-exporting .brand-tag {
+  color: inherit;
+}
+
+body.pdf-exporting .brand-name {
+  color: #f4f1ea !important;
+}
+
+body.pdf-exporting .brand-tag,
+body.pdf-exporting .footer-note,
+body.pdf-exporting .field span {
+  color: rgba(244, 241, 234, 0.62) !important;
+}
+
+body.pdf-exporting .money input,
+body.pdf-exporting .field-total input,
+body.pdf-exporting .currency {
+  color: #9fc292 !important;
+}
+
+body.pdf-exporting .currency {
+  color: #9fc292 !important;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
+}
+
+button {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.7rem 1.15rem;
+  background: var(--green);
+  color: #f7f4ef;
+  font: 600 0.9rem/1 var(--font);
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  background: #4a7a41;
+}
+
+button.ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+button.ghost:hover {
+  border-color: rgba(244, 241, 234, 0.35);
+}
+
+.card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  width: var(--card-w);
+  max-width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--radius);
+  color: var(--ink);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.04), transparent 40%),
+    linear-gradient(180deg, #161b22 0%, #0e1217 100%);
+  border: 1px solid rgba(244, 241, 234, 0.1);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  isolation: isolate;
+}
+
+.card-glow {
+  position: absolute;
+  inset: auto -10% -40% 35%;
+  height: 70%;
+  background: radial-gradient(closest-side, var(--smoke-a), transparent 70%);
+  filter: blur(8px);
+  pointer-events: none;
+  z-index: 0;
+  animation: drift 10s ease-in-out infinite alternate;
+}
+
+.card-glow.soft {
+  inset: auto 10% -50% -10%;
+  background: radial-gradient(closest-side, var(--smoke-b), transparent 72%);
+}
+
+.card-smoke {
+  position: absolute;
+  left: 18%;
+  right: -5%;
+  top: 18%;
+  height: 55%;
+  background:
+    radial-gradient(ellipse 40% 60% at 30% 50%, var(--smoke-c), transparent 70%),
+    radial-gradient(ellipse 50% 80% at 60% 40%, var(--smoke-b), transparent 72%),
+    radial-gradient(ellipse 35% 55% at 80% 60%, var(--smoke-a), transparent 70%);
+  filter: blur(18px);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 1;
+  animation: drift 12s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes drift {
+  from { transform: translateX(-1.5%) translateY(1%); }
+  to { transform: translateX(2%) translateY(-2%); }
+}
+
+.card-visual {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  height: var(--visual-h);
+  min-height: var(--visual-h);
+  padding: 2mm 2mm 0;
+  overflow: hidden;
+  background: #161b22;
+  /* перекрытие стыка с card-body — иначе в PDF белая полоска */
+  margin-bottom: -1.5px;
+}
+
+.decor {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center top;
+  opacity: 1;
+  animation: rise 1.1s ease-out both;
+}
+
+.visual-fade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 45%, rgba(22, 27, 34, 0.55) 78%, #161b22 100%);
+  pointer-events: none;
+}
+
+.card-body {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 3mm var(--card-pad-x) var(--card-pad-y);
+  background: linear-gradient(180deg, #161b22 0%, transparent 12px);
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.logo {
+  width: 72px;
+  height: 72px;
+  flex: none;
+  object-fit: contain;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  animation: rise 0.9s ease-out 0.1s both;
+}
+
+.logo-sm {
+  width: 48px;
+  height: 48px;
+}
+
+.brand-text {
+  flex: 1 1 auto;
+  min-width: max-content;
+  animation: rise 0.9s ease-out 0.18s both;
+}
+
+.brand-name {
+  margin: 0;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  color: var(--ink);
+}
+
+.brand-place {
+  margin: 0.1rem 0 0.25rem;
+  font-family: var(--script);
+  font-size: 1.55rem;
+  color: #7ea56f;
+  line-height: 1;
+}
+
+.brand-tag {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  animation: rise 0.95s ease-out 0.28s both;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  width: 100%;
+  align-items: end;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.field span {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.field-equipment > span,
+.field-lessons > span {
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.field input,
+.stamp-num {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 500 1rem/1.35 var(--display);
+  padding: 0.2rem 0 0.35rem;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.field input:focus,
+.stamp-num:focus {
+  border-bottom-color: var(--green);
+  background: linear-gradient(180deg, transparent, rgba(62, 102, 54, 0.08));
+}
+
+.money {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 100%;
+  border-bottom: 1px solid var(--line);
+}
+
+.money-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  max-width: 100%;
+}
+
+.money input {
+  border-bottom: none;
+  flex: 0 0 auto;
+  width: 1ch;
+  min-width: 1ch;
+  max-width: 16ch;
+  margin: 0;
+  padding: 0.2rem 0 0.35rem;
+  text-align: left;
+  field-sizing: content;
+  color: #9fc292;
+}
+
+.money:focus-within {
+  border-bottom-color: var(--green);
+  background: linear-gradient(180deg, transparent, rgba(62, 102, 54, 0.08));
+}
+
+.currency {
+  box-sizing: content-box;
+  flex: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 1.1em;
+  height: auto;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #9fc292;
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
+  padding: 0.2rem 0 0.35rem;
+  text-align: left;
+  outline: none;
+  cursor: pointer;
+}
+
+select.currency::-ms-expand {
+  display: none;
+}
+
+select.currency:hover,
+select.currency:focus {
+  color: #c9dfc0;
+}
+
+.field-total {
+  margin-top: 0.1rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--line);
+}
+
+.field-total input {
+  font-weight: 600;
+  color: #9fc292;
+  cursor: default;
+}
+
+.field-total .money:focus-within {
+  border-bottom-color: var(--line);
+  background: transparent;
+}
+
+.field-total input:focus {
+  border-bottom-color: transparent;
+  background: transparent;
+}
+
+/* Узкая зона под Итого: печать на половине Итого + в пустом месте */
+.seal-slot {
+  position: relative;
+  width: 100%;
+  height: 12mm;
+  margin-top: 0;
+  pointer-events: none;
+}
+
+.seal {
+  position: absolute;
+  right: -1mm;
+  top: -15mm;
+  width: 34mm;
+  height: auto;
+  margin: 0;
+  transform: rotate(-6deg);
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
+  opacity: 1;
+  user-select: none;
+  z-index: 2;
+}
+
+.card-footer {
+  margin-top: 3mm; /* чуть ниже низа печати, без широкой пустой полосы */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0;
+  animation: rise 1s ease-out 0.36s both;
+}
+
+.stamp {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--green-soft);
+  border-radius: 999px;
+  background: rgba(62, 102, 54, 0.12);
+  flex: none;
+}
+
+.stamp-label {
+  color: #9fc292;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.stamp-num {
+  width: 2.6rem;
+  border: none;
+  padding: 0;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.footer-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+
+.card-back {
+  grid-template-columns: 1fr;
+  min-height: 0;
+  align-self: start;
+}
+
+.back-body {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+  padding: var(--card-pad-y) var(--card-pad-x);
+}
+
+.back-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.back-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.45rem;
+  font-weight: 600;
+}
+
+.back-sub {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.visits {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--visit-gap);
+  width: 100%;
+}
+
+.visit {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: var(--visit-h);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5mm 2mm;
+  border: 0.3mm solid rgba(180, 195, 175, 0.35);
+  border-radius: var(--visit-radius);
+  background: #c8d2c4;
+  color: #1a221c;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.visit:hover {
+  border-color: rgba(62, 102, 54, 0.55);
+  background: #d2dbc9;
+  transform: translateY(-1px);
+}
+
+.visit.used {
+  border-style: solid;
+  border-color: #3e6636;
+  background: #b7c7ad;
+}
+
+.visit-num {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: rgba(26, 34, 28, 0.5);
+  text-transform: uppercase;
+}
+
+.visit-mark {
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  min-height: 1.2em;
+  color: #243828;
+}
+
+.back-footer {
+  justify-content: space-between;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 720px) {
+  .page {
+    width: calc(100% - 1rem);
+  }
+
+  .sheet-stage {
+    justify-content: flex-start;
+  }
+
+  .field-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+    background: #fff;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    background-image: none !important;
+    color: #111;
+    margin: 0;
+    padding: 0;
+  }
+
+  .page {
+    width: var(--a4-w);
+    margin: 0;
+    padding: 0;
+    background: #fff !important;
+  }
+
+  .sheet-stage {
+    display: block;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .sheet {
+    width: var(--a4-w);
+    height: var(--a4-h);
+    padding: var(--sheet-margin);
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: #fff !important;
+  }
+
+  .export-root {
+    display: grid;
+    width: var(--sheet-w);
+    grid-template-columns: var(--card-w) var(--card-w);
+    gap: var(--cards-gap);
+    align-items: start;
+    margin: 0 auto;
+    padding: 0;
+    background: #fff !important;
+  }
+
+  .card {
+    width: var(--card-w);
+    break-inside: avoid;
+    box-shadow: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .visit {
+    height: var(--visit-h) !important;
+  }
+
+  .field input,
+  .stamp-num {
+    border-bottom-color: rgba(244, 241, 234, 0.28);
+  }
+}

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Абонемент — R&amp;K POLE Alanya</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="toolbar no-print">
+      <h1>Шаблон абонемента</h1>
+      <p>Превью ниже — лист A4 1:1. Слева абонемент, справа отметки.</p>
+      <div class="print-specs" aria-label="Параметры печати">
+        <div><strong>Лист:</strong> <code>A4</code> <code>210 × 297 mm</code>, portrait</div>
+        <div><strong>Поля листа:</strong> <code>10 mm</code></div>
+        <div><strong>Раскладка:</strong> 2 колонки — абонемент слева, отметки справа</div>
+        <div><strong>Карточка:</strong> <code>90 × auto mm</code>, зазор <code>6 mm</code> → блок <code>186 mm</code></div>
+        <div><strong>Блок изображения:</strong> высота <code>64 mm</code></div>
+        <div><strong>Ячейка отметки:</strong> высота <code>14 mm</code>, 4 в ряд, зазор <code>2 mm</code></div>
+        <div><strong>PDF / печать:</strong> ровно A4, масштаб <code>100%</code>, цветная</div>
+      </div>
+      <div class="toolbar-actions">
+        <button type="button" id="pdfBtn">Сохранить в PDF</button>
+        <button type="button" id="saveTemplateBtn" class="ghost">Сохранить шаблон</button>
+        <button type="button" id="printBtn" class="ghost">Печать</button>
+        <button type="button" id="resetBtn" class="ghost">Сбросить пример</button>
+      </div>
+    </header>
+
+    <div class="sheet-stage">
+    <div class="sheet" id="sheet" aria-label="Лист A4">
+    <div class="export-root" id="exportRoot">
+    <article class="card" aria-label="Абонемент R&amp;K POLE Alanya">
+      <div class="card-glow" aria-hidden="true"></div>
+      <div class="card-smoke" aria-hidden="true"></div>
+
+      <aside class="card-visual">
+        <img class="decor" src="assets/decor-dancer.png" alt="" />
+        <div class="visual-fade" aria-hidden="true"></div>
+      </aside>
+
+      <section class="card-body">
+        <div class="brand-row">
+          <img class="logo" src="assets/logo-rk-pole.png" alt="R&amp;K POLE Alanya" />
+          <div class="brand-text">
+            <p class="brand-name">R&amp;K POLE</p>
+            <p class="brand-place">Alanya</p>
+            <p class="brand-tag">Абонемент на занятия</p>
+          </div>
+        </div>
+
+        <div class="fields">
+          <label class="field">
+            <span>Имя клиента</span>
+            <input type="text" name="client" value="Кристина Борисова" autocomplete="off" />
+          </label>
+
+          <div class="field-grid">
+            <label class="field field-lessons">
+              <span>Количество занятий</span>
+              <input type="text" name="lessons" value="8" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span>Цена</span>
+              <div class="money">
+                <div class="money-value">
+                  <input type="text" name="price" value="—" autocomplete="off" />
+                  <select class="currency" name="currency" aria-label="Валюта">
+                    <option value="₺" selected>₺</option>
+                    <option value="€">€</option>
+                    <option value="$">$</option>
+                    <option value="₽">₽</option>
+                  </select>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Действует с</span>
+              <input type="text" name="from" value="01.11.2026" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span>до</span>
+              <input type="text" name="until" value="01.12.2026" autocomplete="off" />
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Примечание</span>
+            <input type="text" name="note" value="Pole / Stretch / Choreography" autocomplete="off" />
+          </label>
+
+          <div class="field-grid">
+            <label class="field field-equipment">
+              <span>Доп. аренда</span>
+              <input type="text" name="equipment" value="—" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span>Цена</span>
+              <div class="money">
+                <div class="money-value">
+                  <input type="text" name="equipmentPrice" value="—" autocomplete="off" />
+                  <select class="currency currency-sync" aria-label="Валюта">
+                    <option value="₺" selected>₺</option>
+                    <option value="€">€</option>
+                    <option value="$">$</option>
+                    <option value="₽">₽</option>
+                  </select>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label class="field field-total">
+              <span>Итого:</span>
+              <div class="money">
+                <div class="money-value">
+                  <input type="text" name="totalPrice" value="—" readonly tabindex="-1" />
+                  <select class="currency currency-sync" aria-label="Валюта">
+                    <option value="₺" selected>₺</option>
+                    <option value="€">€</option>
+                    <option value="$">$</option>
+                    <option value="₽">₽</option>
+                  </select>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div class="seal-slot" aria-hidden="true">
+            <img class="seal" src="assets/stamp.png" alt="" />
+          </div>
+        </div>
+
+        <footer class="card-footer">
+          <div class="stamp">
+            <span class="stamp-label">№</span>
+            <input class="stamp-num" type="text" name="number" value="024" autocomplete="off" />
+          </div>
+          <p class="footer-note">R&amp;K POLE Alanya · dance studio</p>
+        </footer>
+      </section>
+    </article>
+
+    <!-- Оборотная сторона: отметки посещений -->
+    <article class="card card-back" aria-label="Отметки посещений">
+      <div class="card-glow soft" aria-hidden="true"></div>
+      <section class="back-body">
+        <div class="brand-row">
+          <img class="logo" src="assets/logo-rk-pole.png" alt="R&amp;K POLE Alanya" />
+          <div class="brand-text">
+            <p class="brand-name">R&amp;K POLE</p>
+            <p class="brand-place">Alanya</p>
+            <p class="brand-tag">Отметки занятий</p>
+          </div>
+        </div>
+
+        <div class="visits" id="visits">
+          <!-- filled by script -->
+        </div>
+
+        <footer class="card-footer back-footer">
+          <div class="stamp">
+            <span class="stamp-label">№</span>
+            <input class="stamp-num" type="text" name="number" value="024" autocomplete="off" />
+          </div>
+          <p class="footer-note">R&amp;K POLE Alanya · dance studio</p>
+        </footer>
+      </section>
+    </article>
+    </div>
+    </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/modern-screenshot@4.5.5/dist/index.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

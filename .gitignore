@@ -1,0 +1,9 @@
+# Source / editor
+*.psd
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+.vscode/
+.idea/
+agent-transcripts/
