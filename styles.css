@@ -988,6 +988,12 @@ select.currency:focus {
   color: var(--ink);
 }
 
+.invoice .money input,
+.invoice .field-total input,
+.invoice .currency {
+  color: #9fc292 !important;
+}
+
 .invoice .brand-place {
   color: #7ea56f;
 }
@@ -1247,6 +1253,17 @@ body.pdf-exporting .export-invoice {
 
 body.pdf-exporting .sheet-invoice {
   padding: 12mm !important;
+}
+
+body.pdf-exporting .sheet {
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+body.pdf-exporting .invoice .money input,
+body.pdf-exporting .invoice .field-total input,
+body.pdf-exporting .invoice .currency {
+  color: #9fc292 !important;
 }
 
 @media (max-width: 720px) {
