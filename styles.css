@@ -1006,6 +1006,83 @@ select.currency:focus {
   color: var(--muted);
 }
 
+/* Светлая тема чека — белый фон, без бежевой заливки (экономия краски) */
+.invoice[data-theme="light"] {
+  color: #1a1f24;
+  background-color: #ffffff;
+  background-image: none;
+  border-color: rgba(26, 31, 36, 0.12);
+}
+
+.invoice[data-theme="light"] .brand-name,
+.invoice[data-theme="light"] .invoice-title,
+.invoice[data-theme="light"] .field input,
+.invoice[data-theme="light"] .pay-select,
+.invoice[data-theme="light"] .stamp-num {
+  color: #1a1f24;
+}
+
+.invoice[data-theme="light"] .money input,
+.invoice[data-theme="light"] .field-total input,
+.invoice[data-theme="light"] .currency {
+  color: #3e6636 !important;
+}
+
+.invoice[data-theme="light"] .brand-place {
+  color: #3e6636;
+}
+
+.invoice[data-theme="light"] .brand-tag,
+.invoice[data-theme="light"] .field span,
+.invoice[data-theme="light"] .sign-label,
+.invoice[data-theme="light"] .footer-note,
+.invoice[data-theme="light"] .inv-head {
+  color: rgba(26, 31, 36, 0.55);
+}
+
+.invoice[data-theme="light"] .invoice-head,
+.invoice[data-theme="light"] .invoice-pay,
+.invoice[data-theme="light"] .field input,
+.invoice[data-theme="light"] .pay-select,
+.invoice[data-theme="light"] .money,
+.invoice[data-theme="light"] .sign-line {
+  border-color: rgba(26, 31, 36, 0.14);
+}
+
+.invoice[data-theme="light"] .invoice-table {
+  border-color: rgba(26, 31, 36, 0.14);
+}
+
+.invoice[data-theme="light"] .inv-head {
+  background: rgba(62, 102, 54, 0.12);
+}
+
+.invoice[data-theme="light"] .stamp {
+  background: rgba(62, 102, 54, 0.1);
+  border-color: rgba(62, 102, 54, 0.35);
+}
+
+.invoice[data-theme="light"] .stamp-label {
+  color: #3e6636;
+}
+
+.invoice[data-theme="light"] .invoice-glow,
+.invoice[data-theme="light"] .invoice-smoke {
+  display: none;
+}
+
+.invoice[data-theme="light"] .seal-invoice {
+  filter: none;
+  opacity: 0.85;
+}
+
+.theme-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
 .invoice-glow {
   position: absolute;
   inset: auto -15% -35% 40%;
@@ -1221,11 +1298,25 @@ select.currency:focus {
 }
 
 body.pdf-exporting .invoice {
+  box-shadow: none;
+}
+
+body.pdf-exporting .invoice[data-theme="dark"] {
   background-color: #161b22 !important;
   background-image:
     linear-gradient(145deg, rgba(255, 255, 255, 0.04), transparent 42%),
     linear-gradient(180deg, #161b22 0%, #0e1217 100%) !important;
-  box-shadow: none;
+}
+
+body.pdf-exporting .invoice[data-theme="light"] {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+body.pdf-exporting .invoice[data-theme="light"] .money input,
+body.pdf-exporting .invoice[data-theme="light"] .field-total input,
+body.pdf-exporting .invoice[data-theme="light"] .currency {
+  color: #3e6636 !important;
 }
 
 body.pdf-exporting .invoice-glow {

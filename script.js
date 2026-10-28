@@ -1,4 +1,5 @@
 const TEMPLATE_KEY = "rk-pole-aboniment-template";
+const INVOICE_THEME_KEY = "rk-pole-invoice-theme";
 const CUSTOM_TEMPLATE_URL = "template.json";
 const EMPTY_TEMPLATE_URL = "template-empty.json";
 const MIN_VISITS = 1;
@@ -432,8 +433,10 @@ function setMode(mode, { sync = true, updateHash = true } = {}) {
   const specsA = document.getElementById("specsAboniment");
   const specsI = document.getElementById("specsInvoice");
   const docActions = document.getElementById("docActions");
+  const themeSwitch = document.getElementById("invoiceThemeSwitch");
   if (specsA) specsA.hidden = mode !== "aboniment";
   if (specsI) specsI.hidden = mode !== "invoice";
+  if (themeSwitch) themeSwitch.hidden = mode !== "invoice";
   if (docActions) docActions.hidden = mode === "template";
 
   const meta = META[mode];
@@ -483,6 +486,24 @@ function printDocument() {
   setTimeout(restoreTitle, 2000);
 }
 
+function getInvoiceTheme() {
+  const saved = localStorage.getItem(INVOICE_THEME_KEY);
+  return saved === "light" ? "light" : "dark";
+}
+
+function setInvoiceTheme(theme) {
+  const next = theme === "light" ? "light" : "dark";
+  const card = document.getElementById("invoiceCard");
+  if (card) card.dataset.theme = next;
+  localStorage.setItem(INVOICE_THEME_KEY, next);
+
+  document.querySelectorAll("[data-invoice-theme]").forEach((btn) => {
+    const active = btn.dataset.invoiceTheme === next;
+    btn.classList.toggle("is-active", active);
+    btn.setAttribute("aria-pressed", String(active));
+  });
+}
+
 document.getElementById("saveTemplateBtn")?.addEventListener("click", saveTemplate);
 document.getElementById("loadTemplateBtn")?.addEventListener("click", loadTemplateFromFile);
 document.getElementById("loadSiteTemplateBtn")?.addEventListener("click", () => {
@@ -494,10 +515,14 @@ document.getElementById("emptyTemplateBtn")?.addEventListener("click", () => {
 });
 document.getElementById("printBtn")?.addEventListener("click", printDocument);
 
+document.querySelectorAll("[data-invoice-theme]").forEach((btn) => {
+  btn.addEventListener("click", () => setInvoiceTheme(btn.dataset.invoiceTheme));
+});
+
 document.querySelectorAll(".mode-btn").forEach((btn) => {
   btn.addEventListener("click", (event) => {
     event.preventDefault();
-    setMode(btn.dataset.mode);
+    if (btn.dataset.mode) setMode(btn.dataset.mode);
   });
 });
 
@@ -540,6 +565,7 @@ document.querySelectorAll(".sheet-stage").forEach((stage) => {
 });
 
 buildVisits(false);
+setInvoiceTheme(getInvoiceTheme());
 initTemplate().finally(() => {
   setMode(currentMode, { sync: false, updateHash: true });
 });
