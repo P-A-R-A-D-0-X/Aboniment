@@ -465,196 +465,24 @@ function fileName() {
   return `RK_POLE_${kind}_${number}_${safe}.pdf`;
 }
 
-function waitForImages(root) {
-  const images = [...root.querySelectorAll("img")];
-  return Promise.all(
-    images.map(
-      (img) =>
-        img.complete
-          ? Promise.resolve()
-          : new Promise((resolve) => {
-              img.addEventListener("load", resolve, { once: true });
-              img.addEventListener("error", resolve, { once: true });
-            })
-    )
-  );
-}
-
-function styleReplacedControl(text, input) {
-  const isCurrency = input.classList.contains("currency");
-  const inMoney = Boolean(input.closest(".money-value"));
-  const isStamp = input.classList.contains("stamp-num");
-  const isTotal =
-    input.name === "totalPrice" ||
-    input.name === "lessonsSum" ||
-    input.name === "equipmentSum";
-  const isPaySelect = input.classList.contains("pay-select") || input.name === "paymentMethod";
-
-  text.style.boxSizing = "border-box";
-  text.style.border = "none";
-  text.style.background = "transparent";
-  text.style.margin = "0";
-  text.style.whiteSpace = "pre";
-  text.style.overflow = "visible";
-
-  if (isStamp) {
-    text.style.width = "2.6rem";
-    text.style.padding = "0";
-    text.style.font = "700 0.95rem/1 Manrope, sans-serif";
-    text.style.letterSpacing = "0.08em";
-    text.style.textAlign = "center";
-    text.style.color = "#f4f1ea";
-  } else if (isCurrency) {
-    text.style.width = "1.1em";
-    text.style.padding = "0.2rem 0 0.35rem";
-    text.style.font = "600 0.95rem/1.35 Manrope, sans-serif";
-    text.style.color = "#9fc292";
-  } else if (inMoney) {
-    const len = Math.max(String(input.value || "").length, 1);
-    text.style.width = input.style.width || `${len}ch`;
-    text.style.padding = "0.2rem 0 0.35rem";
-    text.style.font = isTotal
-      ? "600 1rem/1.35 'Cormorant Garamond', Georgia, serif"
-      : "500 1rem/1.35 'Cormorant Garamond', Georgia, serif";
-    if (input.name === "totalPrice" && isInvoice()) {
-      text.style.font = "600 1.35rem/1.35 'Cormorant Garamond', Georgia, serif";
-    }
-    text.style.color = "#9fc292";
-  } else if (isPaySelect) {
-    text.style.width = "100%";
-    text.style.padding = "0.2rem 0 0.35rem";
-    text.style.font = "500 1rem/1.35 'Cormorant Garamond', Georgia, serif";
-    text.style.color = "#f4f1ea";
-    text.style.borderBottom = "1px solid rgba(244,241,234,0.16)";
-  } else {
-    text.style.width = "100%";
-    text.style.padding = "0.2rem 0 0.35rem";
-    text.style.minHeight = "1.4em";
-    text.style.font = "500 1rem/1.35 'Cormorant Garamond', Georgia, serif";
-    text.style.color = "#f4f1ea";
-    text.style.borderBottom = "1px solid rgba(244,241,234,0.16)";
-  }
-
-  if (input.style.width) text.style.width = input.style.width;
-}
-
-function prepareClone(clonedDoc) {
-  clonedDoc.body.classList.add("pdf-exporting");
-  clonedDoc.querySelectorAll("input, select").forEach((input) => {
-    const text = clonedDoc.createElement("div");
-    text.className = input.className;
-    text.textContent = input.value || "";
-    styleReplacedControl(text, input);
-    input.replaceWith(text);
-  });
-  clonedDoc.querySelectorAll(".toolbar").forEach((el) => el.remove());
-}
-
-function getExportScale() {
-  return 2;
-}
-
-function snapshotInputs(root) {
-  const backups = [];
-  root.querySelectorAll("input, select").forEach((input) => {
-    const text = document.createElement("div");
-    text.className = input.className;
-    text.textContent = input.value || "";
-    styleReplacedControl(text, input);
-    const parent = input.parentNode;
-    parent.replaceChild(text, input);
-    backups.push({ input, text, parent });
-  });
-  return backups;
-}
-
-function restoreInputs(backups) {
-  backups.reverse().forEach(({ input, text, parent }) => {
-    if (text.parentNode === parent) parent.replaceChild(input, text);
-  });
-}
-
-async function renderRoot(root) {
-  const scale = getExportScale();
-  const api = window.modernScreenshot;
-
-  if (api?.domToCanvas) {
-    return api.domToCanvas(root, {
-      scale,
-      backgroundColor: "#ffffff",
-      quality: 1,
-      pixelRatio: scale,
-    });
-  }
-
-  if (window.html2canvas) {
-    return html2canvas(root, {
-      scale,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: "#ffffff",
-      logging: false,
-      foreignObjectRendering: true,
-      onclone: (doc) => prepareClone(doc),
-    });
-  }
-
-  throw new Error("Нет библиотеки для снимка");
-}
-
-async function savePdf() {
+function printDocument() {
   if (isTemplate()) {
     setMode("aboniment");
     return;
   }
 
-  const btn = document.getElementById("pdfBtn");
-  const sheet = activeSheet();
-  const root = activeExportRoot();
-  const JsPDF = window.jspdf?.jsPDF;
-  const captureTarget = sheet || root;
+  const prevTitle = document.title;
+  document.title = fileName().replace(/\.pdf$/i, "");
 
-  if (!JsPDF || !captureTarget) {
-    window.print();
-    return;
-  }
-
-  btn.disabled = true;
-  const prevText = btn.textContent;
-  btn.textContent = "Сохранение…";
-  const pdfName = fileName();
-  document.body.classList.add("pdf-exporting");
-  const backups = snapshotInputs(root || captureTarget);
-
-  try {
-    await document.fonts?.ready;
-    await waitForImages(captureTarget);
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-
-    const canvas = await renderRoot(captureTarget);
-    const imgData = canvas.toDataURL("image/png");
-
-    const PDF = new window.jspdf.jsPDF({
-      unit: "mm",
-      format: "a4",
-      orientation: "portrait",
-      compress: false,
-    });
-
-    PDF.addImage(imgData, "PNG", 0, 0, 210, 297, undefined, "NONE");
-    PDF.save(pdfName);
-  } catch (err) {
-    console.error(err);
-    alert("Не удалось сохранить PDF. Попробуйте «Печать» → «Сохранить как PDF».");
-  } finally {
-    restoreInputs(backups);
-    document.body.classList.remove("pdf-exporting");
-    btn.disabled = false;
-    btn.textContent = prevText;
-  }
+  const restoreTitle = () => {
+    document.title = prevTitle;
+    window.removeEventListener("afterprint", restoreTitle);
+  };
+  window.addEventListener("afterprint", restoreTitle);
+  window.print();
+  setTimeout(restoreTitle, 2000);
 }
 
-document.getElementById("pdfBtn")?.addEventListener("click", savePdf);
 document.getElementById("saveTemplateBtn")?.addEventListener("click", saveTemplate);
 document.getElementById("loadTemplateBtn")?.addEventListener("click", loadTemplateFromFile);
 document.getElementById("loadSiteTemplateBtn")?.addEventListener("click", () => {
@@ -664,7 +492,7 @@ document.getElementById("templateFileInput")?.addEventListener("change", onTempl
 document.getElementById("emptyTemplateBtn")?.addEventListener("click", () => {
   loadEmptyTemplate();
 });
-document.getElementById("printBtn")?.addEventListener("click", () => window.print());
+document.getElementById("printBtn")?.addEventListener("click", printDocument);
 
 document.querySelectorAll(".mode-btn").forEach((btn) => {
   btn.addEventListener("click", (event) => {
