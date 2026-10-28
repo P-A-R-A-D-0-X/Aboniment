@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Чек об оплате — R&amp;K POLE Alanya</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-doc="invoice">
+  <div class="page">
+    <header class="toolbar no-print">
+      <h1>Чек / инвойс об оплате</h1>
+      <p>Отдельный лист A4. Данные клиента и суммы подтягиваются из шаблона абонемента.</p>
+
+      <nav class="doc-nav" aria-label="Документы">
+        <a href="index.html">Абонемент</a>
+        <a href="invoice.html" aria-current="page">Чек об оплате</a>
+      </nav>
+
+      <div class="print-specs" aria-label="Параметры печати">
+        <div><strong>Лист:</strong> <code>A4</code> <code>210 × 297 mm</code>, portrait</div>
+        <div><strong>Поля листа:</strong> <code>12 mm</code></div>
+        <div><strong>Документ:</strong> чек / инвойс на всю ширину рабочей области</div>
+        <div><strong>PDF / печать:</strong> ровно A4, масштаб <code>100%</code>, цветная</div>
+      </div>
+
+      <div class="toolbar-actions">
+        <button type="button" id="pdfBtn">Сохранить в PDF</button>
+        <button type="button" id="saveTemplateBtn" class="ghost">Сохранить шаблон</button>
+        <button type="button" id="printBtn" class="ghost">Печать</button>
+        <button type="button" id="resetBtn" class="ghost">Сбросить пример</button>
+      </div>
+    </header>
+
+    <div class="sheet-stage">
+      <div class="sheet sheet-invoice" id="sheet" aria-label="Лист A4 — чек об оплате">
+        <div class="export-root export-invoice" id="exportRoot">
+          <article class="invoice" aria-label="Чек об оплате R&amp;K POLE Alanya">
+            <div class="invoice-glow" aria-hidden="true"></div>
+            <div class="invoice-smoke" aria-hidden="true"></div>
+
+            <header class="invoice-head">
+              <div class="brand-row">
+                <img class="logo" src="assets/logo-rk-pole.png" alt="R&amp;K POLE Alanya" />
+                <div class="brand-text">
+                  <p class="brand-name">R&amp;K POLE</p>
+                  <p class="brand-place">Alanya</p>
+                  <p class="brand-tag">Dance studio</p>
+                </div>
+              </div>
+              <div class="invoice-title-block">
+                <p class="invoice-kicker">Payment receipt</p>
+                <h2 class="invoice-title">Чек об оплате</h2>
+                <div class="invoice-meta">
+                  <label class="field field-inline">
+                    <span>№</span>
+                    <input class="stamp-num invoice-num" type="text" name="number" value="024" autocomplete="off" />
+                  </label>
+                  <label class="field field-inline">
+                    <span>Дата оплаты</span>
+                    <input type="text" name="paidAt" value="28.10.2026" autocomplete="off" />
+                  </label>
+                </div>
+              </div>
+            </header>
+
+            <section class="invoice-party">
+              <label class="field">
+                <span>Клиент</span>
+                <input type="text" name="client" value="Кристина Борисова" autocomplete="off" />
+              </label>
+              <div class="field-grid">
+                <label class="field">
+                  <span>Период с</span>
+                  <input type="text" name="from" value="01.11.2026" autocomplete="off" />
+                </label>
+                <label class="field">
+                  <span>до</span>
+                  <input type="text" name="until" value="01.12.2026" autocomplete="off" />
+                </label>
+              </div>
+              <label class="field">
+                <span>Назначение / примечание</span>
+                <input type="text" name="note" value="Pole / Stretch / Choreography" autocomplete="off" />
+              </label>
+            </section>
+
+            <section class="invoice-table" aria-label="Позиции">
+              <div class="inv-row inv-head" aria-hidden="true">
+                <span>Описание</span>
+                <span>Кол-во</span>
+                <span>Цена</span>
+                <span>Сумма</span>
+              </div>
+
+              <div class="inv-row">
+                <label class="field inv-desc">
+                  <span class="sr-only">Описание</span>
+                  <input type="text" name="serviceLabel" value="Абонемент на занятия" autocomplete="off" />
+                </label>
+                <label class="field">
+                  <span class="sr-only">Количество</span>
+                  <input type="text" name="lessons" value="8" autocomplete="off" />
+                </label>
+                <label class="field">
+                  <span class="sr-only">Цена</span>
+                  <div class="money">
+                    <div class="money-value">
+                      <input type="text" name="price" value="—" autocomplete="off" />
+                      <select class="currency" name="currency" aria-label="Валюта">
+                        <option value="₺" selected>₺</option>
+                        <option value="€">€</option>
+                        <option value="$">$</option>
+                        <option value="₽">₽</option>
+                      </select>
+                    </div>
+                  </div>
+                </label>
+                <label class="field">
+                  <span class="sr-only">Сумма</span>
+                  <div class="money">
+                    <div class="money-value">
+                      <input type="text" name="lessonsSum" value="—" readonly tabindex="-1" />
+                      <select class="currency currency-sync" aria-label="Валюта" tabindex="-1">
+                        <option value="₺" selected>₺</option>
+                        <option value="€">€</option>
+                        <option value="$">$</option>
+                        <option value="₽">₽</option>
+                      </select>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              <div class="inv-row">
+                <label class="field inv-desc">
+                  <span class="sr-only">Доп. аренда</span>
+                  <input type="text" name="equipment" value="—" autocomplete="off" />
+                </label>
+                <label class="field">
+                  <span class="sr-only">Количество</span>
+                  <input type="text" name="equipmentQty" value="8" autocomplete="off" />
+                </label>
+                <label class="field">
+                  <span class="sr-only">Цена</span>
+                  <div class="money">
+                    <div class="money-value">
+                      <input type="text" name="equipmentPrice" value="—" autocomplete="off" />
+                      <select class="currency currency-sync" aria-label="Валюта">
+                        <option value="₺" selected>₺</option>
+                        <option value="€">€</option>
+                        <option value="$">$</option>
+                        <option value="₽">₽</option>
+                      </select>
+                    </div>
+                  </div>
+                </label>
+                <label class="field">
+                  <span class="sr-only">Сумма</span>
+                  <div class="money">
+                    <div class="money-value">
+                      <input type="text" name="equipmentSum" value="—" readonly tabindex="-1" />
+                      <select class="currency currency-sync" aria-label="Валюта" tabindex="-1">
+                        <option value="₺" selected>₺</option>
+                        <option value="€">€</option>
+                        <option value="$">$</option>
+                        <option value="₽">₽</option>
+                      </select>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </section>
+
+            <section class="invoice-total-block">
+              <label class="field field-total">
+                <span>Итого к оплате</span>
+                <div class="money">
+                  <div class="money-value">
+                    <input type="text" name="totalPrice" value="—" readonly tabindex="-1" />
+                    <select class="currency currency-sync" aria-label="Валюта" tabindex="-1">
+                      <option value="₺" selected>₺</option>
+                      <option value="€">€</option>
+                      <option value="$">$</option>
+                      <option value="₽">₽</option>
+                    </select>
+                  </div>
+                </div>
+              </label>
+            </section>
+
+            <section class="invoice-pay">
+              <label class="field">
+                <span>Способ оплаты</span>
+                <select name="paymentMethod" class="pay-select">
+                  <option value="Наличные" selected>Наличные</option>
+                  <option value="Карта">Карта</option>
+                  <option value="Перевод">Перевод</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Статус</span>
+                <input type="text" name="paymentStatus" value="Оплачено" autocomplete="off" />
+              </label>
+            </section>
+
+            <footer class="invoice-foot">
+              <div class="invoice-sign">
+                <p class="sign-label">Подпись / штамп студии</p>
+                <div class="sign-line" aria-hidden="true"></div>
+              </div>
+              <div class="invoice-seal-wrap" aria-hidden="true">
+                <img class="seal seal-invoice" src="assets/stamp.png" alt="" />
+              </div>
+              <p class="footer-note">R&amp;K POLE Alanya · dance studio</p>
+            </footer>
+          </article>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/modern-screenshot@4.5.5/dist/index.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

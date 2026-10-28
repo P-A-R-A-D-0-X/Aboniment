@@ -1,6 +1,9 @@
 const TEMPLATE_KEY = "rk-pole-aboniment-template";
+const DOC = document.body?.dataset?.doc || "aboniment";
+const IS_INVOICE = DOC === "invoice";
 const MIN_VISITS = 1;
 const MAX_VISITS = 32;
+
 const FIELD_NAMES = [
   "client",
   "lessons",
@@ -11,7 +14,13 @@ const FIELD_NAMES = [
   "equipment",
   "equipmentPrice",
   "number",
+  "paidAt",
+  "paymentMethod",
+  "paymentStatus",
+  "serviceLabel",
+  "equipmentQty",
 ];
+
 const defaults = {
   client: "Кристина Борисова",
   lessons: "8",
@@ -23,6 +32,11 @@ const defaults = {
   equipment: "—",
   equipmentPrice: "—",
   number: "024",
+  paidAt: "28.10.2026",
+  paymentMethod: "Наличные",
+  paymentStatus: "Оплачено",
+  serviceLabel: "Абонемент на занятия",
+  equipmentQty: "8",
   visits: [],
 };
 
@@ -43,9 +57,14 @@ function formatMoney(sum) {
 function fitMoneyInputs() {
   document.querySelectorAll(".money-value input").forEach((input) => {
     const len = Math.max(String(input.value || "").length, 1);
-    // ширина ровно по символам — валюта вплотную к цифре
     input.style.width = `${len}ch`;
   });
+}
+
+function setNamedValue(name, value) {
+  const el = document.querySelector(`[name="${name}"]`);
+  if (!el || value == null) return;
+  el.value = value;
 }
 
 function updateTotalPrice() {
@@ -54,9 +73,20 @@ function updateTotalPrice() {
   const equipmentPrice = parseMoney(
     document.querySelector('input[name="equipmentPrice"]')?.value
   );
-  const total = lessons * (price + equipmentPrice);
-  const totalInput = document.querySelector('input[name="totalPrice"]');
-  if (totalInput) totalInput.value = formatMoney(total);
+
+  if (IS_INVOICE) {
+    const equipmentQty = parseMoney(
+      document.querySelector('input[name="equipmentQty"]')?.value
+    );
+    const lessonsSum = lessons * price;
+    const equipmentSum = equipmentQty * equipmentPrice;
+    setNamedValue("lessonsSum", formatMoney(lessonsSum));
+    setNamedValue("equipmentSum", formatMoney(equipmentSum));
+    setNamedValue("totalPrice", formatMoney(lessonsSum + equipmentSum));
+  } else {
+    setNamedValue("totalPrice", formatMoney(lessons * (price + equipmentPrice)));
+  }
+
   fitMoneyInputs();
 }
 
@@ -68,6 +98,8 @@ function getLessonCount() {
 
 function buildVisits(preserveMarks = true) {
   const root = document.getElementById("visits");
+  if (!root) return;
+
   const count = getLessonCount();
   const prev = preserveMarks
     ? [...root.querySelectorAll(".visit")].map((cell) => cell.classList.contains("used"))
@@ -97,40 +129,61 @@ function buildVisits(preserveMarks = true) {
   }
 }
 
+function readStoredTemplate() {
+  try {
+    return JSON.parse(localStorage.getItem(TEMPLATE_KEY) || "{}") || {};
+  } catch {
+    return {};
+  }
+}
+
 function collectTemplate() {
-  const data = {};
+  const data = { ...readStoredTemplate() };
   FIELD_NAMES.forEach((name) => {
-    const input = document.querySelector(`input[name="${name}"]`);
-    data[name] = input ? input.value : "";
+    const input = document.querySelector(`[name="${name}"]`);
+    if (input) data[name] = input.value;
   });
-  data.currency = document.querySelector('select[name="currency"]')?.value || "₺";
-  data.visits = [...document.querySelectorAll(".visit")].map((cell) =>
-    cell.classList.contains("used")
-  );
+  const currency = document.querySelector('select[name="currency"]')?.value;
+  if (currency) data.currency = currency;
+  if (!IS_INVOICE) {
+    data.visits = [...document.querySelectorAll(".visit")].map((cell) =>
+      cell.classList.contains("used")
+    );
+  }
   return data;
 }
 
 function applyTemplate(data) {
   if (!data) return;
   FIELD_NAMES.forEach((name) => {
-    const inputs = document.querySelectorAll(`input[name="${name}"]`);
+    const inputs = document.querySelectorAll(`[name="${name}"]`);
     inputs.forEach((input) => {
       if (data[name] != null) input.value = data[name];
     });
   });
+
+  // На чеке qty аренды по умолчанию = числу занятий, если ещё не задано
+  if (IS_INVOICE && data.equipmentQty == null && data.lessons != null) {
+    setNamedValue("equipmentQty", data.lessons);
+  }
+
   if (data.currency) {
     document.querySelectorAll("select.currency").forEach((el) => {
       el.value = data.currency;
     });
   }
-  buildVisits(false);
-  const visits = Array.isArray(data.visits) ? data.visits : [];
-  document.querySelectorAll(".visit").forEach((cell, index) => {
-    const used = Boolean(visits[index]);
-    cell.classList.toggle("used", used);
-    cell.setAttribute("aria-pressed", String(used));
-    cell.querySelector(".visit-mark").textContent = used ? "✓" : "";
-  });
+
+  if (!IS_INVOICE) {
+    buildVisits(false);
+    const visits = Array.isArray(data.visits) ? data.visits : [];
+    document.querySelectorAll(".visit").forEach((cell, index) => {
+      const used = Boolean(visits[index]);
+      cell.classList.toggle("used", used);
+      cell.setAttribute("aria-pressed", String(used));
+      cell.querySelector(".visit-mark").textContent = used ? "✓" : "";
+    });
+  }
+
   updateTotalPrice();
   syncCurrency();
   fitMoneyInputs();
@@ -182,7 +235,8 @@ function fileName() {
   const client = document.querySelector('input[name="client"]')?.value?.trim() || "client";
   const number = document.querySelector('input[name="number"]')?.value?.trim() || "000";
   const safe = client.replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, "_");
-  return `RK_POLE_Aboniment_${number}_${safe}.pdf`;
+  const kind = IS_INVOICE ? "Invoice" : "Aboniment";
+  return `RK_POLE_${kind}_${number}_${safe}.pdf`;
 }
 
 function waitForImages(root) {
@@ -200,6 +254,65 @@ function waitForImages(root) {
   );
 }
 
+function styleReplacedControl(text, input, computed) {
+  const isCurrency = input.classList.contains("currency");
+  const inMoney = Boolean(input.closest(".money-value"));
+  const isStamp = input.classList.contains("stamp-num");
+  const isTotal = input.name === "totalPrice" || input.name === "lessonsSum" || input.name === "equipmentSum";
+  const isPaySelect = input.classList.contains("pay-select") || input.name === "paymentMethod";
+
+  text.style.boxSizing = "border-box";
+  text.style.border = "none";
+  text.style.background = "transparent";
+  text.style.margin = "0";
+  text.style.whiteSpace = "pre";
+  text.style.overflow = "visible";
+
+  if (isStamp) {
+    text.style.width = input.classList.contains("invoice-num") ? "3rem" : "2.6rem";
+    text.style.padding = "0";
+    text.style.font = "700 0.95rem/1 Manrope, sans-serif";
+    text.style.letterSpacing = "0.08em";
+    text.style.textAlign = "center";
+    text.style.color = "#f4f1ea";
+  } else if (isCurrency) {
+    text.style.width = "1.1em";
+    text.style.padding = "0.2rem 0 0.35rem";
+    text.style.font = "600 0.95rem/1.35 Manrope, sans-serif";
+    text.style.color = "#9fc292";
+  } else if (inMoney) {
+    const len = Math.max(String(input.value || "").length, 1);
+    text.style.width = input.style.width || `${len}ch`;
+    text.style.padding = "0.2rem 0 0.35rem";
+    text.style.font = isTotal
+      ? "600 1rem/1.35 'Cormorant Garamond', Georgia, serif"
+      : "500 1rem/1.35 'Cormorant Garamond', Georgia, serif";
+    if (input.name === "totalPrice" && IS_INVOICE) {
+      text.style.font = "600 1.35rem/1.35 'Cormorant Garamond', Georgia, serif";
+    }
+    text.style.color = "#9fc292";
+    text.style.borderBottom = "none";
+  } else if (isPaySelect) {
+    text.style.width = "100%";
+    text.style.padding = "0.2rem 0 0.35rem";
+    text.style.font = "500 1rem/1.35 'Cormorant Garamond', Georgia, serif";
+    text.style.color = "#f4f1ea";
+    text.style.borderBottom = "1px solid rgba(244,241,234,0.16)";
+  } else {
+    text.style.width = "100%";
+    text.style.padding = "0.2rem 0 0.35rem";
+    text.style.minHeight = "1.4em";
+    text.style.font = "500 1rem/1.35 'Cormorant Garamond', Georgia, serif";
+    text.style.color = "#f4f1ea";
+    text.style.borderBottom = "1px solid rgba(244,241,234,0.16)";
+  }
+
+  if (input.style.width) text.style.width = input.style.width;
+  if (computed && inMoney && !isCurrency) {
+    text.style.lineHeight = computed.lineHeight;
+  }
+}
+
 function prepareClone(clonedDoc) {
   clonedDoc.body.classList.add("pdf-exporting");
 
@@ -208,55 +321,7 @@ function prepareClone(clonedDoc) {
     const text = clonedDoc.createElement("div");
     text.className = input.className;
     text.textContent = input.value || "";
-
-    const isCurrency = input.classList.contains("currency");
-    const inMoney = Boolean(input.closest(".money-value"));
-    const isStamp = input.classList.contains("stamp-num");
-    const isTotal = input.name === "totalPrice";
-
-    text.style.boxSizing = "border-box";
-    text.style.border = "none";
-    text.style.background = "transparent";
-    text.style.margin = "0";
-    text.style.whiteSpace = "pre";
-    text.style.overflow = "visible";
-
-    if (isStamp) {
-      text.style.width = "2.6rem";
-      text.style.padding = "0";
-      text.style.font = "700 0.95rem/1 Manrope, sans-serif";
-      text.style.letterSpacing = "0.08em";
-      text.style.textAlign = "center";
-      text.style.color = "#f4f1ea";
-    } else if (isCurrency) {
-      text.style.width = "1.1em";
-      text.style.padding = "0.2rem 0 0.35rem";
-      text.style.font = "600 0.95rem/1.35 Manrope, sans-serif";
-      text.style.color = "#9fc292";
-    } else if (inMoney) {
-      const len = Math.max(String(input.value || "").length, 1);
-      text.style.width = `${len}ch`;
-      text.style.padding = "0.2rem 0 0.35rem";
-      text.style.font = isTotal
-        ? "600 1rem/1.35 'Cormorant Garamond', Georgia, serif"
-        : "500 1rem/1.35 'Cormorant Garamond', Georgia, serif";
-      text.style.color = "#9fc292";
-      text.style.borderBottom = "none";
-    } else {
-      text.style.width = "100%";
-      text.style.padding = "0.2rem 0 0.35rem";
-      text.style.minHeight = "1.4em";
-      text.style.font = "500 1rem/1.35 'Cormorant Garamond', Georgia, serif";
-      text.style.color = "#f4f1ea";
-      text.style.borderBottom = "1px solid rgba(244,241,234,0.16)";
-    }
-
-    // сохраняем фактическую ширину, если она была подогнана на экране
-    if (input.style.width) text.style.width = input.style.width;
-    if (computed && inMoney && !isCurrency) {
-      text.style.lineHeight = computed.lineHeight;
-    }
-
+    styleReplacedControl(text, input, computed);
     input.replaceWith(text);
   });
 
@@ -275,45 +340,11 @@ function snapshotInputs(root) {
     const text = document.createElement("div");
     text.className = input.className;
     text.textContent = input.value || "";
-
-    const isCurrency = input.classList.contains("currency");
-    const inMoney = Boolean(input.closest(".money-value"));
-    const isStamp = input.classList.contains("stamp-num");
-    const isTotal = input.name === "totalPrice";
-
-    text.style.boxSizing = "border-box";
-    text.style.border = "none";
-    text.style.background = "transparent";
-    text.style.margin = "0";
-    text.style.whiteSpace = "pre";
-
-    if (isStamp) {
-      text.style.cssText +=
-        ";width:2.6rem;padding:0;font:700 0.95rem/1 Manrope,sans-serif;letter-spacing:0.08em;text-align:center;color:#f4f1ea";
-    } else if (isCurrency) {
-      text.style.cssText +=
-        ";width:1.1em;padding:0.2rem 0 0.35rem;font:600 0.95rem/1.35 Manrope,sans-serif;color:#9fc292";
-    } else if (inMoney) {
-      const len = Math.max(String(input.value || "").length, 1);
-      text.style.width = input.style.width || `${len}ch`;
-      text.style.padding = "0.2rem 0 0.35rem";
-      text.style.font = isTotal
-        ? "600 1rem/1.35 'Cormorant Garamond', Georgia, serif"
-        : "500 1rem/1.35 'Cormorant Garamond', Georgia, serif";
-      text.style.color = "#9fc292";
-    } else {
-      text.style.width = "100%";
-      text.style.padding = "0.2rem 0 0.35rem";
-      text.style.minHeight = "1.4em";
-      text.style.font = "500 1rem/1.35 'Cormorant Garamond', Georgia, serif";
-      text.style.color = "#f4f1ea";
-      text.style.borderBottom = "1px solid rgba(244,241,234,0.16)";
-    }
+    styleReplacedControl(text, input, null);
 
     const parent = input.parentNode;
-    const next = input.nextSibling;
     parent.replaceChild(text, input);
-    backups.push({ input, text, parent, next });
+    backups.push({ input, text, parent });
   });
   return backups;
 }
@@ -337,7 +368,6 @@ async function renderRoot(root) {
     });
   }
 
-  // запасной вариант
   if (window.html2canvas) {
     return html2canvas(root, {
       scale,
@@ -368,7 +398,7 @@ async function savePdf() {
   btn.disabled = true;
   const prevText = btn.textContent;
   btn.textContent = "Сохранение…";
-  const pdfName = fileName(); // до замены input → иначе имя сбрасывается
+  const pdfName = fileName();
   document.body.classList.add("pdf-exporting");
   const backups = snapshotInputs(root || captureTarget);
 
@@ -380,7 +410,6 @@ async function savePdf() {
     const canvas = await renderRoot(captureTarget);
     const imgData = canvas.toDataURL("image/png");
 
-    // Всегда настоящий A4 — как на превью листа
     const A4_W = 210;
     const A4_H = 297;
     const PDF = new JsPDF({
@@ -403,19 +432,24 @@ async function savePdf() {
   }
 }
 
-document.getElementById("pdfBtn").addEventListener("click", savePdf);
-document.getElementById("saveTemplateBtn").addEventListener("click", saveTemplate);
-document.getElementById("printBtn").addEventListener("click", () => window.print());
-document.getElementById("resetBtn").addEventListener("click", resetExample);
+document.getElementById("pdfBtn")?.addEventListener("click", savePdf);
+document.getElementById("saveTemplateBtn")?.addEventListener("click", saveTemplate);
+document.getElementById("printBtn")?.addEventListener("click", () => window.print());
+document.getElementById("resetBtn")?.addEventListener("click", resetExample);
 
 const exportRoot = document.getElementById("exportRoot");
-exportRoot.addEventListener("input", (event) => {
+exportRoot?.addEventListener("input", (event) => {
   const t = event.target;
   if (!(t instanceof HTMLInputElement || t instanceof HTMLSelectElement)) return;
+
   if (t.matches('input[name="lessons"]')) {
-    buildVisits(true);
+    if (!IS_INVOICE) buildVisits(true);
     updateTotalPrice();
-  } else if (t.matches('input[name="price"], input[name="equipmentPrice"]')) {
+  } else if (
+    t.matches(
+      'input[name="price"], input[name="equipmentPrice"], input[name="equipmentQty"]'
+    )
+  ) {
     updateTotalPrice();
   } else if (t.matches('input[name="number"]')) {
     syncNumber(t);
@@ -423,23 +457,24 @@ exportRoot.addEventListener("input", (event) => {
     fitMoneyInputs();
   }
 });
-exportRoot.addEventListener("change", (event) => {
+
+exportRoot?.addEventListener("change", (event) => {
   const t = event.target;
   if (t instanceof HTMLSelectElement && t.classList.contains("currency")) {
     syncCurrency(t);
   }
-  if (t instanceof HTMLInputElement && t.matches('input[name="lessons"]')) {
-    buildVisits(true);
-    updateTotalPrice();
-  } else if (
+  if (
     t instanceof HTMLInputElement &&
-    t.matches('input[name="price"], input[name="equipmentPrice"]')
+    t.matches(
+      'input[name="lessons"], input[name="price"], input[name="equipmentPrice"], input[name="equipmentQty"]'
+    )
   ) {
+    if (!IS_INVOICE && t.matches('input[name="lessons"]')) buildVisits(true);
     updateTotalPrice();
   }
 });
 
-buildVisits(false);
+if (!IS_INVOICE) buildVisits(false);
 if (!loadTemplate()) {
   updateTotalPrice();
   syncCurrency();

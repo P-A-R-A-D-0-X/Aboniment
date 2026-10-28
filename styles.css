@@ -661,8 +661,8 @@ select.currency:focus {
   height: auto;
   margin: 0;
   transform: rotate(-6deg);
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
-  opacity: 1;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+  opacity: 0.92;
   user-select: none;
   z-index: 2;
 }
@@ -814,6 +814,344 @@ select.currency:focus {
   }
 }
 
+/* Навигация между документами */
+.doc-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.doc-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  text-decoration: none;
+  font: 600 0.85rem/1 var(--font);
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.doc-nav a:hover {
+  color: var(--ink);
+  border-color: rgba(244, 241, 234, 0.35);
+}
+
+.doc-nav a[aria-current="page"] {
+  color: #f7f4ef;
+  background: var(--green);
+  border-color: transparent;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===== Чек / инвойс A4 ===== */
+.sheet-invoice {
+  --sheet-margin: 12mm;
+}
+
+.export-invoice {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.invoice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7mm;
+  width: 100%;
+  min-height: calc(var(--a4-h) - 24mm);
+  padding: 10mm 11mm 9mm;
+  overflow: hidden;
+  border-radius: var(--radius);
+  color: var(--ink);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.04), transparent 42%),
+    linear-gradient(180deg, #161b22 0%, #0e1217 100%);
+  border: 1px solid rgba(244, 241, 234, 0.1);
+  isolation: isolate;
+}
+
+.invoice-glow {
+  position: absolute;
+  inset: auto -15% -35% 40%;
+  height: 55%;
+  background: radial-gradient(closest-side, var(--smoke-a), transparent 72%);
+  filter: blur(10px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.invoice-smoke {
+  position: absolute;
+  inset: 8% 5% auto 20%;
+  height: 40%;
+  background:
+    radial-gradient(ellipse 40% 60% at 30% 50%, var(--smoke-c), transparent 70%),
+    radial-gradient(ellipse 50% 80% at 70% 40%, var(--smoke-b), transparent 72%);
+  filter: blur(20px);
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.invoice-head,
+.invoice-party,
+.invoice-table,
+.invoice-total-block,
+.invoice-pay,
+.invoice-foot {
+  position: relative;
+  z-index: 1;
+}
+
+.invoice-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8mm;
+  padding-bottom: 5mm;
+  border-bottom: 1px solid var(--line);
+}
+
+.invoice-title-block {
+  text-align: right;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.invoice-kicker {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.invoice-title {
+  margin: 0.25rem 0 0.7rem;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.6rem, 3.2vw, 2.1rem);
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+
+.invoice-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem 1.25rem;
+}
+
+.field-inline {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.45rem;
+  width: auto;
+}
+
+.field-inline span {
+  flex: none;
+}
+
+.field-inline input {
+  width: auto;
+  min-width: 4.5rem;
+  text-align: right;
+}
+
+.invoice-num {
+  width: 3rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.invoice-party {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.invoice-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--line);
+  border-radius: 3mm;
+  overflow: hidden;
+}
+
+.inv-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) 0.7fr 1fr 1fr;
+  gap: 0.5rem;
+  align-items: end;
+  padding: 2.8mm 3.2mm;
+  border-bottom: 1px solid var(--line);
+}
+
+.inv-row:last-child {
+  border-bottom: none;
+}
+
+.inv-head {
+  background: rgba(62, 102, 54, 0.18);
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  align-items: center;
+  padding-top: 2.4mm;
+  padding-bottom: 2.4mm;
+}
+
+.inv-desc {
+  min-width: 0;
+}
+
+.invoice-total-block {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.invoice-total-block .field-total {
+  width: min(100%, 72mm);
+  margin-top: 0;
+  padding: 3mm 0 0;
+}
+
+.invoice-total-block .field-total input {
+  font-size: 1.35rem;
+}
+
+.invoice-pay {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  padding-top: 2mm;
+  border-top: 1px solid var(--line);
+}
+
+.pay-select {
+  width: 100%;
+  appearance: none;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 500 1rem/1.35 var(--display);
+  padding: 0.2rem 0 0.35rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.pay-select:focus {
+  border-bottom-color: var(--green);
+}
+
+.invoice-foot {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 4mm 8mm;
+  align-items: end;
+  padding-top: 4mm;
+  border-top: 1px solid var(--line);
+}
+
+.invoice-sign {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.sign-label {
+  margin: 0 0 0.55rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sign-line {
+  width: min(100%, 70mm);
+  height: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.invoice-seal-wrap {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.seal-invoice {
+  position: static;
+  width: 42mm;
+  transform: rotate(-8deg);
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+  opacity: 0.92;
+}
+
+.invoice-foot .footer-note {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+body.pdf-exporting .invoice {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.04), transparent 42%),
+    linear-gradient(180deg, #161b22 0%, #0e1217 100%) !important;
+  box-shadow: none;
+}
+
+body.pdf-exporting .invoice-glow {
+  filter: none !important;
+  background: radial-gradient(
+    closest-side,
+    rgba(62, 102, 54, 0.5),
+    rgba(62, 102, 54, 0.18) 45%,
+    transparent 72%
+  ) !important;
+}
+
+body.pdf-exporting .invoice-smoke {
+  filter: none !important;
+  background:
+    radial-gradient(ellipse 42% 62% at 28% 48%, rgba(180, 120, 140, 0.28), transparent 70%),
+    radial-gradient(ellipse 52% 78% at 62% 40%, rgba(90, 130, 150, 0.32), transparent 72%) !important;
+}
+
+body.pdf-exporting .export-invoice {
+  display: block !important;
+  width: 100% !important;
+  grid-template-columns: none !important;
+}
+
+body.pdf-exporting .sheet-invoice {
+  padding: 12mm !important;
+}
+
 @media (max-width: 720px) {
   .page {
     width: calc(100% - 1rem);
@@ -882,12 +1220,26 @@ select.currency:focus {
     background: #fff !important;
   }
 
-  .card {
-    width: var(--card-w);
+  .export-invoice {
+    display: block !important;
+    width: 100% !important;
+    grid-template-columns: none !important;
+  }
+
+  .sheet-invoice {
+    padding: 12mm;
+  }
+
+  .card,
+  .invoice {
     break-inside: avoid;
     box-shadow: none;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  .card {
+    width: var(--card-w);
   }
 
   .visit {
