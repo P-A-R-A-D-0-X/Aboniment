@@ -382,7 +382,7 @@ function styleReplacedControl(text, input) {
   text.style.overflow = "visible";
 
   if (isStamp) {
-    text.style.width = input.classList.contains("invoice-num") ? "3rem" : "2.6rem";
+    text.style.width = "2.6rem";
     text.style.padding = "0";
     text.style.font = "700 0.95rem/1 Manrope, sans-serif";
     text.style.letterSpacing = "0.08em";

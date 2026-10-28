@@ -209,17 +209,12 @@
                 </div>
               </div>
               <div class="invoice-title-block">
-                <p class="invoice-kicker">Payment receipt</p>
-                <h2 class="invoice-title">Чек об оплате</h2>
+                <h2 class="invoice-title">Payment receipt</h2>
                 <div class="invoice-meta">
-                  <label class="field field-inline">
-                    <span>№</span>
-                    <input class="stamp-num invoice-num" type="text" name="number" value="024" autocomplete="off" />
-                  </label>
-                  <label class="field field-inline">
-                    <span>Дата оплаты</span>
-                    <input type="text" name="paidAt" value="28.10.2026" autocomplete="off" />
-                  </label>
+                  <div class="stamp">
+                    <span class="stamp-label">№</span>
+                    <input class="stamp-num" type="text" name="number" value="024" autocomplete="off" />
+                  </div>
                 </div>
               </div>
             </header>
@@ -350,6 +345,10 @@
             </section>
 
             <section class="invoice-pay">
+              <label class="field">
+                <span>Дата оплаты</span>
+                <input type="text" name="paidAt" value="28.10.2026" autocomplete="off" />
+              </label>
               <label class="field">
                 <span>Способ оплаты</span>
                 <select name="paymentMethod" class="pay-select">
