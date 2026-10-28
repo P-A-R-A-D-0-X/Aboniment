@@ -1,4 +1,6 @@
 const TEMPLATE_KEY = "rk-pole-aboniment-template";
+const CUSTOM_TEMPLATE_URL = "template.json";
+const EMPTY_TEMPLATE_URL = "template-empty.json";
 const MIN_VISITS = 1;
 const MAX_VISITS = 32;
 
@@ -23,18 +25,18 @@ const FIELD_NAMES = [
   "equipmentQty",
 ];
 
-const defaults = {
-  client: "Кристина Борисова",
+const EMPTY_TEMPLATE = {
+  client: "",
   lessons: "8",
   price: "—",
   currency: "₺",
-  from: "01.11.2026",
-  until: "01.12.2026",
-  note: "Pole / Stretch / Choreography",
+  from: "",
+  until: "",
+  note: "",
   equipment: "—",
   equipmentPrice: "—",
-  number: "024",
-  paidAt: "28.10.2026",
+  number: "",
+  paidAt: "",
   paymentMethod: "Наличные",
   paymentStatus: "Оплачено",
   serviceLabel: "Абонемент на занятия",
@@ -53,24 +55,42 @@ const META = {
     hint: "Отдельный лист A4. Данные клиента и суммы синхронизируются с абонементом.",
     docTitle: "Чек об оплате — R&K POLE Alanya",
   },
+  template: {
+    title: "Шаблон",
+    hint: "Общие данные для абонемента и чека: скачать, загрузить или очистить.",
+    docTitle: "Шаблон — R&K POLE Alanya",
+  },
 };
 
-let currentMode =
-  (location.hash || "").replace("#", "") === "invoice" ? "invoice" : "aboniment";
+const DOC_MODES = new Set(["aboniment", "invoice", "template"]);
+
+function modeFromHash() {
+  const hash = (location.hash || "").replace("#", "");
+  return DOC_MODES.has(hash) ? hash : "aboniment";
+}
+
+let currentMode = modeFromHash();
 
 function isInvoice() {
   return currentMode === "invoice";
 }
 
+function isTemplate() {
+  return currentMode === "template";
+}
+
 function activeStage() {
+  if (isTemplate()) return null;
   return document.getElementById(isInvoice() ? "stageInvoice" : "stageAboniment");
 }
 
 function activeSheet() {
+  if (isTemplate()) return null;
   return document.getElementById(isInvoice() ? "sheetInvoice" : "sheetAboniment");
 }
 
 function activeExportRoot() {
+  if (isTemplate()) return null;
   return document.getElementById(isInvoice() ? "exportInvoice" : "exportAboniment");
 }
 
@@ -228,18 +248,94 @@ function applyTemplate(data) {
   fitMoneyInputs(document);
 }
 
+function flashButton(btn, text, ms = 1400) {
+  if (!btn) return;
+  const prev = btn.textContent;
+  btn.textContent = text;
+  setTimeout(() => {
+    btn.textContent = prev;
+  }, ms);
+}
+
+function downloadTemplateFile(data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "template.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function fetchJson(url) {
+  const res = await fetch(`${url}?t=${Date.now()}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 function saveTemplate() {
   const data = collectTemplate();
   localStorage.setItem(TEMPLATE_KEY, JSON.stringify(data));
-  const btn = document.getElementById("saveTemplateBtn");
-  const prev = btn.textContent;
-  btn.textContent = "Сохранено";
-  setTimeout(() => {
-    btn.textContent = prev;
-  }, 1200);
+  downloadTemplateFile(data);
+  flashButton(document.getElementById("saveTemplateBtn"), "Скачан");
 }
 
-function loadTemplate() {
+function applyLoadedTemplate(data, btn, okText = "Загружен") {
+  applyTemplate(data);
+  localStorage.setItem(TEMPLATE_KEY, JSON.stringify(collectTemplate()));
+  flashButton(btn, okText);
+}
+
+async function loadSiteTemplate() {
+  const btn = document.getElementById("loadSiteTemplateBtn");
+  try {
+    const data = await fetchJson(CUSTOM_TEMPLATE_URL);
+    applyLoadedTemplate(data, btn, "С сайта");
+  } catch (err) {
+    console.error(err);
+    alert(
+      "Не удалось загрузить template.json с сайта. Нужен push файла в репозиторий или открой через Live Server."
+    );
+  }
+}
+
+function loadTemplateFromFile() {
+  document.getElementById("templateFileInput")?.click();
+}
+
+function onTemplateFileChosen(event) {
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  if (!file) return;
+
+  const btn = document.getElementById("loadTemplateBtn");
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(String(reader.result || ""));
+      applyLoadedTemplate(data, btn, "Из файла");
+    } catch (err) {
+      console.error(err);
+      alert("Не удалось прочитать JSON. Проверь, что это файл template.json.");
+    }
+  };
+  reader.onerror = () => alert("Не удалось открыть файл.");
+  reader.readAsText(file);
+}
+
+async function loadEmptyTemplate() {
+  const btn = document.getElementById("emptyTemplateBtn");
+  try {
+    const data = await fetchJson(EMPTY_TEMPLATE_URL);
+    applyTemplate(data);
+  } catch {
+    applyTemplate({ ...EMPTY_TEMPLATE, visits: [] });
+  }
+  localStorage.removeItem(TEMPLATE_KEY);
+  flashButton(btn, "Очищено");
+}
+
+function loadStoredTemplate() {
   try {
     const raw = localStorage.getItem(TEMPLATE_KEY);
     if (!raw) return false;
@@ -250,8 +346,22 @@ function loadTemplate() {
   }
 }
 
-function resetExample() {
-  applyTemplate({ ...defaults, visits: [] });
+async function initTemplate() {
+  if (loadStoredTemplate()) return;
+
+  try {
+    const data = await fetchJson(CUSTOM_TEMPLATE_URL);
+    applyTemplate(data);
+    return;
+  } catch {
+    /* file:// или нет файла */
+  }
+
+  applyTemplate({ ...EMPTY_TEMPLATE, visits: [] });
+  updateTotalPrice(document.getElementById("stageAboniment"));
+  updateTotalPrice(document.getElementById("stageInvoice"));
+  syncCurrency();
+  fitMoneyInputs(document);
 }
 
 function syncCurrency(source) {
@@ -300,7 +410,7 @@ function syncSharedFrom(fromStage) {
 }
 
 function setMode(mode, { sync = true, updateHash = true } = {}) {
-  if (mode !== "aboniment" && mode !== "invoice") return;
+  if (!DOC_MODES.has(mode)) return;
 
   const prevStage = activeStage();
   currentMode = mode;
@@ -308,8 +418,10 @@ function setMode(mode, { sync = true, updateHash = true } = {}) {
 
   const stageA = document.getElementById("stageAboniment");
   const stageI = document.getElementById("stageInvoice");
+  const stageT = document.getElementById("stageTemplate");
   if (stageA) stageA.hidden = mode !== "aboniment";
   if (stageI) stageI.hidden = mode !== "invoice";
+  if (stageT) stageT.hidden = mode !== "template";
 
   document.querySelectorAll(".mode-btn").forEach((btn) => {
     const active = btn.dataset.mode === mode;
@@ -319,8 +431,10 @@ function setMode(mode, { sync = true, updateHash = true } = {}) {
 
   const specsA = document.getElementById("specsAboniment");
   const specsI = document.getElementById("specsInvoice");
+  const docActions = document.getElementById("docActions");
   if (specsA) specsA.hidden = mode !== "aboniment";
   if (specsI) specsI.hidden = mode !== "invoice";
+  if (docActions) docActions.hidden = mode === "template";
 
   const meta = META[mode];
   const titleEl = document.getElementById("toolbarTitle");
@@ -329,14 +443,16 @@ function setMode(mode, { sync = true, updateHash = true } = {}) {
   if (hintEl) hintEl.textContent = meta.hint;
   document.title = meta.docTitle;
 
-  if (sync && prevStage) syncSharedFrom(prevStage);
-  else {
-    updateTotalPrice(activeStage());
-    fitMoneyInputs(activeStage() || document);
+  if (mode !== "template") {
+    if (sync && prevStage) syncSharedFrom(prevStage);
+    else {
+      updateTotalPrice(activeStage());
+      fitMoneyInputs(activeStage() || document);
+    }
   }
 
   if (updateHash) {
-    const next = mode === "invoice" ? "#invoice" : "#aboniment";
+    const next = `#${mode}`;
     if (location.hash !== next) history.replaceState(null, "", next);
   }
 }
@@ -487,6 +603,11 @@ async function renderRoot(root) {
 }
 
 async function savePdf() {
+  if (isTemplate()) {
+    setMode("aboniment");
+    return;
+  }
+
   const btn = document.getElementById("pdfBtn");
   const sheet = activeSheet();
   const root = activeExportRoot();
@@ -535,15 +656,22 @@ async function savePdf() {
 
 document.getElementById("pdfBtn")?.addEventListener("click", savePdf);
 document.getElementById("saveTemplateBtn")?.addEventListener("click", saveTemplate);
+document.getElementById("loadTemplateBtn")?.addEventListener("click", loadTemplateFromFile);
+document.getElementById("loadSiteTemplateBtn")?.addEventListener("click", () => {
+  loadSiteTemplate();
+});
+document.getElementById("templateFileInput")?.addEventListener("change", onTemplateFileChosen);
+document.getElementById("emptyTemplateBtn")?.addEventListener("click", () => {
+  loadEmptyTemplate();
+});
 document.getElementById("printBtn")?.addEventListener("click", () => window.print());
-document.getElementById("resetBtn")?.addEventListener("click", resetExample);
 
 document.querySelectorAll(".mode-btn").forEach((btn) => {
   btn.addEventListener("click", () => setMode(btn.dataset.mode));
 });
 
 window.addEventListener("hashchange", () => {
-  const mode = (location.hash || "").replace("#", "") === "invoice" ? "invoice" : "aboniment";
+  const mode = modeFromHash();
   if (mode !== currentMode) setMode(mode, { sync: true, updateHash: false });
 });
 
@@ -581,11 +709,6 @@ document.querySelectorAll(".sheet-stage").forEach((stage) => {
 });
 
 buildVisits(false);
-if (!loadTemplate()) {
-  updateTotalPrice(document.getElementById("stageAboniment"));
-  updateTotalPrice(document.getElementById("stageInvoice"));
-  syncCurrency();
-  fitMoneyInputs(document);
-}
-
-setMode(currentMode, { sync: false, updateHash: true });
+initTemplate().finally(() => {
+  setMode(currentMode, { sync: false, updateHash: true });
+});

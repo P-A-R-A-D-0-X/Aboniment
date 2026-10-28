@@ -1,0 +1,18 @@
+{
+  "client": "",
+  "lessons": "8",
+  "price": "—",
+  "currency": "₺",
+  "from": "",
+  "until": "",
+  "note": "",
+  "equipment": "—",
+  "equipmentPrice": "—",
+  "number": "",
+  "paidAt": "",
+  "paymentMethod": "Наличные",
+  "paymentStatus": "Оплачено",
+  "serviceLabel": "Абонемент на занятия",
+  "equipmentQty": "8",
+  "visits": [false, false, false, false, false, false, false, false]
+}

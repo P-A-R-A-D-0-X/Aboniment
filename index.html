@@ -12,13 +12,14 @@
 <body data-doc="aboniment">
   <div class="page">
     <header class="toolbar no-print">
-      <h1 id="toolbarTitle">Шаблон абонемента</h1>
-      <p id="toolbarHint">Превью ниже — лист A4 1:1. Слева абонемент, справа отметки.</p>
-
-      <div class="doc-nav" role="tablist" aria-label="Документы">
+      <div class="doc-nav" role="tablist" aria-label="Разделы">
         <button type="button" class="mode-btn is-active" role="tab" aria-selected="true" data-mode="aboniment">Абонемент</button>
         <button type="button" class="mode-btn" role="tab" aria-selected="false" data-mode="invoice">Чек об оплате</button>
+        <button type="button" class="mode-btn" role="tab" aria-selected="false" data-mode="template">Шаблон</button>
       </div>
+
+      <h1 id="toolbarTitle">Шаблон абонемента</h1>
+      <p id="toolbarHint">Превью ниже — лист A4 1:1. Слева абонемент, справа отметки.</p>
 
       <div class="print-specs" id="specsAboniment" aria-label="Параметры печати абонемента">
         <div><strong>Лист:</strong> <code>A4</code> <code>210 × 297 mm</code>, portrait</div>
@@ -37,11 +38,9 @@
         <div><strong>PDF / печать:</strong> ровно A4, масштаб <code>100%</code>, цветная</div>
       </div>
 
-      <div class="toolbar-actions">
+      <div class="toolbar-actions" id="docActions">
         <button type="button" id="pdfBtn">Сохранить в PDF</button>
-        <button type="button" id="saveTemplateBtn" class="ghost">Сохранить шаблон</button>
         <button type="button" id="printBtn" class="ghost">Печать</button>
-        <button type="button" id="resetBtn" class="ghost">Сбросить пример</button>
       </div>
     </header>
 
@@ -287,10 +286,10 @@
                 </label>
               </div>
 
-              <div class="inv-row">
-                <label class="field inv-desc">
-                  <span class="sr-only">Доп. аренда</span>
-                  <input type="text" name="equipment" value="—" autocomplete="off" />
+              <div class="inv-row inv-row-equipment">
+                <label class="field inv-desc field-equipment">
+                  <span>Доп. аренда</span>
+                  <input type="text" name="equipment" value="—" placeholder="что арендуется" autocomplete="off" />
                 </label>
                 <label class="field">
                   <span class="sr-only">Количество</span>
@@ -377,6 +376,59 @@
         </div>
       </div>
     </div>
+
+    <!-- ===== Шаблон ===== -->
+    <section class="template-panel no-print" id="stageTemplate" data-stage="template" hidden>
+      <div class="toolbar-actions template-actions">
+        <button type="button" id="saveTemplateBtn">Скачать</button>
+        <button type="button" id="loadTemplateBtn" class="ghost">Загрузить</button>
+        <button type="button" id="loadSiteTemplateBtn" class="ghost">Загрузить с сайта</button>
+        <button type="button" id="emptyTemplateBtn" class="ghost">Пустой шаблон</button>
+        <input type="file" id="templateFileInput" accept="application/json,.json" hidden />
+      </div>
+
+      <div class="template-card">
+        <h2 class="template-card-title">Что такое шаблон</h2>
+        <div class="template-docs">
+          <p>
+            Шаблон — это сохранённый набор данных для документов: имя клиента, число занятий,
+            цены, период, примечание, доп. аренда, номер, дата и способ оплаты, статус.
+            Один и тот же шаблон заполняет и <strong>абонемент</strong>, и <strong>чек об оплате</strong>.
+          </p>
+          <p>
+            Поля можно править прямо на сайте в разделах «Абонемент» и «Чек».
+            Либо скачать файл <code>template.json</code>, изменить его и загрузить обратно.
+          </p>
+
+          <h3>Что внутри файла</h3>
+          <ul>
+            <li><code>client</code> — имя клиента</li>
+            <li><code>lessons</code> — количество занятий</li>
+            <li><code>price</code> — цена за занятие</li>
+            <li><code>currency</code> — валюта (₺ € $ ₽)</li>
+            <li><code>from</code> / <code>until</code> — период действия</li>
+            <li><code>note</code> — примечание / направление</li>
+            <li><code>equipment</code> — что в доп. аренде</li>
+            <li><code>equipmentPrice</code> — цена доп. аренды</li>
+            <li><code>equipmentQty</code> — количество по аренде (в чеке)</li>
+            <li><code>number</code> — номер документа</li>
+            <li><code>paidAt</code> — дата оплаты</li>
+            <li><code>paymentMethod</code> — способ оплаты</li>
+            <li><code>paymentStatus</code> — статус (например, «Оплачено»)</li>
+            <li><code>serviceLabel</code> — название услуги в чеке</li>
+            <li><code>visits</code> — отметки занятий на абонементе</li>
+          </ul>
+
+          <h3>Кнопки</h3>
+          <ul>
+            <li><strong>Скачать</strong> — сохраняет текущие поля в браузере и скачивает <code>template.json</code> на компьютер.</li>
+            <li><strong>Загрузить</strong> — выбираешь свой <code>template.json</code> с компьютера и подставляешь данные в документы.</li>
+            <li><strong>Загрузить с сайта</strong> — берёт <code>template.json</code> из проекта / с GitHub Pages.</li>
+            <li><strong>Пустой шаблон</strong> — очищает поля, чтобы начать с чистого листа.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/modern-screenshot@4.5.5/dist/index.js"></script>
