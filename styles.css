@@ -136,6 +136,11 @@ body.pdf-exporting .toolbar {
   display: none !important;
 }
 
+body.pdf-exporting .sheet-stage[hidden],
+.sheet-stage[hidden] {
+  display: none !important;
+}
+
 body.pdf-exporting .card,
 body.pdf-exporting .decor,
 body.pdf-exporting .logo,
@@ -822,7 +827,8 @@ select.currency:focus {
   margin: 0 0 1rem;
 }
 
-.doc-nav a {
+.doc-nav a,
+.mode-btn {
   display: inline-flex;
   align-items: center;
   padding: 0.55rem 1rem;
@@ -830,19 +836,30 @@ select.currency:focus {
   border-radius: 999px;
   color: var(--muted);
   text-decoration: none;
+  background: transparent;
   font: 600 0.85rem/1 var(--font);
-  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease, transform 0.15s ease;
 }
 
-.doc-nav a:hover {
+.doc-nav a:hover,
+.mode-btn:hover {
   color: var(--ink);
   border-color: rgba(244, 241, 234, 0.35);
+  transform: none;
+  background: transparent;
 }
 
-.doc-nav a[aria-current="page"] {
+.doc-nav a[aria-current="page"],
+.mode-btn.is-active {
   color: #f7f4ef;
   background: var(--green);
   border-color: transparent;
+}
+
+.mode-btn.is-active:hover {
+  background: #4a7a41;
+  color: #f7f4ef;
 }
 
 .sr-only {
@@ -880,11 +897,36 @@ select.currency:focus {
   overflow: hidden;
   border-radius: var(--radius);
   color: var(--ink);
-  background:
+  /* solid fallback — иначе на белом листе светлый текст «пропадает» */
+  background-color: #161b22;
+  background-image:
     linear-gradient(145deg, rgba(255, 255, 255, 0.04), transparent 42%),
     linear-gradient(180deg, #161b22 0%, #0e1217 100%);
   border: 1px solid rgba(244, 241, 234, 0.1);
   isolation: isolate;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.invoice .brand-name,
+.invoice .invoice-title,
+.invoice .field input,
+.invoice .pay-select,
+.invoice .stamp-num {
+  color: var(--ink);
+}
+
+.invoice .brand-place {
+  color: #7ea56f;
+}
+
+.invoice .brand-tag,
+.invoice .invoice-kicker,
+.invoice .field span,
+.invoice .sign-label,
+.invoice .footer-note,
+.invoice .inv-head {
+  color: var(--muted);
 }
 
 .invoice-glow {
@@ -1119,7 +1161,8 @@ select.currency:focus {
 }
 
 body.pdf-exporting .invoice {
-  background:
+  background-color: #161b22 !important;
+  background-image:
     linear-gradient(145deg, rgba(255, 255, 255, 0.04), transparent 42%),
     linear-gradient(180deg, #161b22 0%, #0e1217 100%) !important;
   box-shadow: none;
@@ -1174,6 +1217,10 @@ body.pdf-exporting .sheet-invoice {
   }
 
   .no-print {
+    display: none !important;
+  }
+
+  .sheet-stage[hidden] {
     display: none !important;
   }
 
