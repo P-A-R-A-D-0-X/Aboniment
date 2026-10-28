@@ -1083,6 +1083,37 @@ select.currency:focus {
   margin: 0 0 1rem;
 }
 
+.theme-switch[hidden],
+#invoiceThemeSwitch[hidden] {
+  display: none !important;
+}
+
+.theme-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: transparent;
+  font: 600 0.85rem/1 var(--font);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.theme-btn:hover {
+  color: var(--ink);
+  border-color: rgba(244, 241, 234, 0.35);
+  transform: none;
+  background: transparent;
+}
+
+.theme-btn.is-active {
+  color: #f7f4ef;
+  background: var(--green);
+  border-color: transparent;
+}
+
 .invoice-glow {
   position: absolute;
   inset: auto -15% -35% 40%;
