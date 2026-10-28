@@ -667,7 +667,10 @@ document.getElementById("emptyTemplateBtn")?.addEventListener("click", () => {
 document.getElementById("printBtn")?.addEventListener("click", () => window.print());
 
 document.querySelectorAll(".mode-btn").forEach((btn) => {
-  btn.addEventListener("click", () => setMode(btn.dataset.mode));
+  btn.addEventListener("click", (event) => {
+    event.preventDefault();
+    setMode(btn.dataset.mode);
+  });
 });
 
 window.addEventListener("hashchange", () => {

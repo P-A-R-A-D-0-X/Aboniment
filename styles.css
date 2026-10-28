@@ -207,7 +207,9 @@ body.pdf-exporting .toolbar {
 }
 
 body.pdf-exporting .sheet-stage[hidden],
-.sheet-stage[hidden] {
+.sheet-stage[hidden],
+#stageTemplate[hidden],
+.template-panel[hidden] {
   display: none !important;
 }
 
