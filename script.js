@@ -461,7 +461,7 @@ function fileName() {
   const client = getNamedValue("client")?.trim() || "client";
   const number = getNamedValue("number")?.trim() || "000";
   const safe = client.replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, "_");
-  const kind = isInvoice() ? "Invoice" : "Aboniment";
+  const kind = isInvoice() ? "Payment_Receipt" : "Aboniment";
   return `RK_POLE_${kind}_${number}_${safe}.pdf`;
 }
 
